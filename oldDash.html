@@ -1,0 +1,439 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Dashboard</title>
+	<link rel="stylesheet" href="site.css">
+	<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+	<link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">	
+    <script type="text/javascript" src="scripts/uiButtonClicks.js"></script>
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+	<script type="text/javascript" src="testData.js"></script>
+	<script type="text/javascript" src="globalVariables.js"></script>
+</head>
+
+<body>
+	<div id="container">
+		<div id="header">
+			<img id="contactPicture" src="images/profile.jpg">
+			<div id="profileName">Aaron Durrence</div>
+			<div id="profileID">ID #28241</div>
+			<div class="tabs" id="dashboardTab" onclick="location.href='oldDash.html'">Dashboard
+				<div id="chosenTab"></div>
+			</div>
+			<div class="tabs" id="trackingTab" onclick="location.href='oldTracking.html'">Team Tracking</div>
+			<div id="circle" onclick="location.href='oldTracking.html'"></div>
+			<div class="tabs" id="memberTab" onclick="location.href='oldMember.html'">Team Members</div>
+			<div class="tabs" id="scannerTab" onclick="location.href='oldScanning.html'">Scan In/Out</div>
+			<div id="address">500 West Monroe, Chicago, IL 60605</div>
+			<div id="changeValues" onclick="setValues()">&#8942</div>
+		</div>
+		<div id="highlightContainer">
+			<div class="sectionTitle" id="heatHighlightHeader"><div class="sectionTitleText">Heat Point Highlights</div></div>
+			<div id="heatContainer">
+				<div class="personContainer" id="person1">
+					<div class="heatName" id="name1">Scott Huang</div>
+					<div class="background bar bar1" name="test"></div>
+					<div class="heat bar bar1" id="heat1"></div>
+					<div class="heatElapsed" id="elapsed1">00:00:00</div>
+				</div>
+				<div class="personContainer" id="person2">
+					<div class="heatName" id="name2">Mahhhhhhhhhhh'tin Peter Konrad Leigh</div>
+					<div class="background bar bar2"></div>
+					<div class="heat bar bar2" id="heat2"></div>
+					<div class="heatElapsed" id="elapsed2">00:00:00</div>
+				</div>
+				<div class="personContainer" id="person3">
+					<div class="heatName" id="name3">Itai de la Vega</div>
+					<div class="background bar bar3"></div>
+					<div class="heat bar bar3" id="heat3"></div>
+					<div class="heatElapsed" id="elapsed3">00:00:00</div>
+				</div>
+			</div>
+			<div class="sectionTitle" id="rallyPointHeader"><div class="sectionTitleText">Rally Point Highlights</div></div>
+			<div id="chartContainer">
+				<div id="totalTeamNum"></div>
+				<div class="rallyText" id="totalLabel">Team Members</div>			
+				<div class="vertical line" id="line1"></div>
+				<div class="horizontal line" id="line2"></div>
+				<div id="boxContainer">
+					<div id="box1" class="box">
+						<div class="vertical line" id="line3"></div>
+						<div class="boxNumber" id="heatNum"></div>
+						<div class="boxLabel">Heat</div>
+					</div>
+					<div id="box2" class="box">
+						<div class="vertical line" id="line4"></div>
+						<div class="boxNumber" id="incidentStagingNum"></div>
+						<div class="boxLabel"></div>
+					</div>
+					<div id="box3" class="box">
+						<div class="vertical line" id="line5"></div>
+						<div class="boxNumber" id="inTransitNum"></div>
+						<div class="boxLabel">In Transit</div>
+					</div>
+					<div id="box4" class="box">
+						<div class="vertical line" id="line6"></div>
+						<div class="boxNumber" id="resourceControlNum"></div>
+						<div class="boxLabel"></div>
+					</div>
+				</div>
+			</div>
+		</div>		
+		<div id="activityFeedContainer">
+			<div id="activityFeedHeader">Activity Feed</div>
+			<div id="activityFeed">
+				<div id="vertLine"></div>
+			</div>
+		</div>
+	</div>
+	
+	<script type="text/javascript">
+
+		$(document).ready(function(){
+			useDefaultValues();
+			getMaxOxygen();
+			getCheckpointNames();
+			setWidth(); 
+			setCircle(); 
+			pageLoad();
+		});
+
+		
+		// adds events back into activity feed with new names and new maxOxygen value
+		function pageLoad(){
+			updateHeatBar(); 
+			setActivityFeedText(); 
+			numberVisible(); 
+			positionBullets();
+			setVertLineHeight(); 
+		}
+
+		// Function called when vertical ellipses in top right corner clicked
+		function setValues(){
+			setMaxOxygen(); // Changes max oxygen value
+			setCheckpointNames(); // Changes Checkpoint Names
+			$('#activityFeed').html("<div id='vertLine'></div>"); //resets activity feed to original html
+			pageLoad();
+		}
+
+		// Updates checkpoint names in Rally Point Highlights Section
+		function updateCheckpointNames(point1,point2){
+			$('#box4 .boxLabel').html(point1);
+			$('#box2 .boxLabel').html(point2);
+		}
+
+		//////////////////////////////////////////////////////////////
+		// Gets JSON data and outputs each scan into the activity feed
+		//////////////////////////////////////////////////////////////
+		function setActivityFeedText(){
+			var lastTime =jsonData[0].time, // Original Time to compare to
+				name,
+				time,
+				location,
+				countHeat = 0, // # of people that Checked-In to Heat during "Last-Time"
+				countIncidentIn = 0, // # of people that Checked-In to Incident Staging during "Last-Time"
+				countIncidentOut = 0, // # of people that Checked-Out of Incident Staging during "Last-Time"
+				countResourceIn = 0, // # of people that Checked-In to Resource Control during "Last-Time"
+				countResourceOut = 0, // # of people that Checked-Out of Resource Control during "Last-Time"
+				content = "", // HTML to be added to Activity Feed
+				namesAdded = [], // Determines which names have had their current location recorded
+				totalMem = 0, // Current # of Members at the Scene
+				currentHeat = 0, // Current # of Members in Heat Zone
+				currentIS = 0, // Current # of Memebers at Incident Staging
+				currentInTransit = 0, // Current # of Members "In Transit"
+				currentRC = 0; // Current # of Member at Resource Control Checkpoint
+			
+			// Looping through all data in 'testData.js'
+			for(var i = 0; i < jsonData.length; i++){
+
+				// Sets name, time, and location to next data's values
+				name = jsonData[i].name;
+				time = jsonData[i].time;
+				location = jsonData[i].location;
+
+				// Executed if the current whereabouts of a member at the scene hasnt been accounted for
+				if(namesAdded.indexOf(name)==-1){
+					namesAdded.push(name); //adds name to names[] to know current whereabouts has been accounted for
+					totalMem++; 
+					$('#totalTeamNum').html(totalMem);
+					if(location == "Heat"){
+						var now = new Date().getTime();
+						var dataTime = new Date(time).getTime();
+						var elapsed = now-dataTime;
+						var hours = Math.floor((elapsed % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+						var minutes = Math.floor((elapsed % (1000 * 60 * 60)) / (1000 * 60));
+						var seconds = Math.floor((elapsed % (1000 * 60)) / 1000);
+						if(hours < 10){
+							hours = "0"+hours;
+						}
+						if(minutes < 10){
+							minutes = "0"+minutes;
+						}
+						if (seconds < 10){
+							seconds = "0"+seconds;
+						}
+						currentHeat++;
+						$('#heatNum').html(currentHeat);
+
+						/* 
+						Setting order of heat bars so person that has been there the longest is on top
+						as data is read with most recent 1st
+						*/
+						if(currentHeat == 1){
+							$('#name1').html(name);
+							$('#elapsed1').html(hours+":"+minutes+":"+seconds);
+						}
+						else if (currentHeat == 2){
+							$('#name2').html($('#name1').html());
+							$('#elapsed2').html($('#elapsed1').html());
+							$('#name1').html(name);
+							$('#elapsed1').html(hours+":"+minutes+":"+seconds);
+						}
+						else{
+							$('#name3').html($('#name2').html());
+							$('#elapsed3').html($('#elapsed2').html());
+							$('#name2').html($('#name1').html());
+							$('#elapsed2').html($('#elapsed1').html());
+							$('#name1').html(name);
+							$('#elapsed1').html(hours+":"+minutes+":"+seconds);
+						}
+					}
+					if(location == "Incident Staging"){
+						currentIS++;
+						$('#incidentStagingNum').html(currentIS);
+					}
+					if(location == "In Transit to Incident Staging" || location == "In Transit to Resource Control"){
+						currentInTransit++;
+						$('#inTransitNum').html(currentInTransit);
+					}
+					if(location == "Resource Control"){
+						currentRC++;
+						$('#resourceControlNum').html(currentRC);
+					}
+				}
+
+				// If time isnt equal to last time we add HTML to Activity Feed section by calling addToContent()
+				if (time != lastTime){
+					addToContent();
+				}
+				//adding count
+				if(location == 'Heat'){
+					countHeat++;
+					countResourceOut++;
+				}
+				else if(location == "Resource Control"){
+					countResourceIn++;
+				}
+				else if(location ==  "Incident Staging"){
+					countIncidentIn++;
+				}
+				else if(location == "In Transit to Resource Control"){
+					countIncidentOut++;
+				}
+				else{
+					countResourceOut++;
+				}
+				lastTime=jsonData[i].time;
+			}
+
+			// needed to add last event's data
+			addToContent();
+
+			// Where HTML actually added to the Activity Feed section 
+			$('#vertLine').after(content);
+			
+
+			//Sets HTML to be added to activity feed and resets counts for "last-time"
+			function addToContent(){
+				var splitLastTime = lastTime.split(/[TZ]/)[1],
+					timeSplit = splitLastTime.split(/[:.]/),
+					hour = timeSplit[0],
+					minute = timeSplit[1];
+
+				if(hour >= 12){
+						if(hour == 12){
+							tempTime = hour+":"+minute+" PM";
+						}
+						else{
+							hour -= 12;
+							tempTime = hour+":"+minute+ " PM";
+						}
+					}
+					else{
+						if(hour == 0){
+							hour = 12
+						}
+						tempTime = hour+":"+minute+" AM";
+					}
+				content += "<div class='timeContainer'><div class='activityBullet'></div><div class='timeText'>" + tempTime +
+						"<div class='activityText'>";
+				if(countHeat > 0){
+					content += countHeat + " Team Members entered the Heat Zone <br>" ;
+					countHeat=0;
+				}
+				if(countIncidentIn > 0){
+					content +=countIncidentIn + " Team Members checked-in at "+ point2 +"<br>";
+					countIncidentIn=0;
+				}
+				if(countIncidentOut > 0){
+					content +=countIncidentOut + " Team Members checked-out of "+ point2 +"<br>";
+					countIncidentOut=0;
+				}
+				if(countResourceIn > 0){
+					content +=countResourceIn + " Team Members checked-in at "+ point1 +"<br>";
+					countResourceIn=0
+				}
+				if(countResourceOut > 0){
+					content +=countResourceOut + " Team Members checked-out of "+ point2 +"<br>";
+					countResourceOut=0;
+				}
+				content += "</div></div></div>";
+			}
+		}
+
+		//////////////////////////////////////////////////////////////////
+		// sets width of blue line under dashboard tab to the width of tab
+		//////////////////////////////////////////////////////////////////
+		function setWidth(){
+            var newWidth =  document.getElementById("dashboardTab").offsetWidth + "px";
+            document.getElementById("chosenTab").style.width = newWidth;
+        }
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		// sets size and position of circle above team tracking tab based on the size of window at load time
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		function setCircle(){
+			var tabTop = document.getElementById("trackingTab").offsetTop,
+				tabLeft = document.getElementById("trackingTab").offsetLeft,
+				tabWidth = document.getElementById("trackingTab").offsetWidth,
+				tabHeight = document.getElementById("trackingTab").offsetHeight,
+				windowHeight = window.innerHeight,
+				circleTop = tabTop - (tabHeight/2),
+				circleLeft = tabLeft + tabWidth+2;
+            $('#circle').css({"width": tabHeight, "height": tabHeight, "border-radius":tabHeight/2 + "px", "left": circleLeft, "top": circleTop});			
+		}
+
+		//////////////////////////////////////////////////////
+		// Calls updateHeatBar function every second (1000 ms)
+		//////////////////////////////////////////////////////
+		var counter = setInterval(function(){
+			updateHeatBar();
+		},1000);
+		
+		///////////////////////////////////////////////////////////
+		// Sets width of red bar based on percentage of oxygen used
+		/////////////////////////////////////////////////////////// 
+		function updateHeatBar(){
+			var maxBarWidth = $('.background').width();
+			var inDanger = 0;
+			$('#circle').css({"visibility": "hidden"});
+			var warningPercent = 0.9; //value between 0-1
+			// looping through all 3 heat bars
+			for (var i = 1; i <= 3; i++){
+				// gets previous amount of elapsed time
+				var elapsedTime = $('#elapsed'+i).html();
+
+				var timeArray = elapsedTime.split(':');
+
+				// calculates # of seconds the previous elapsed time equates to
+				var seconds = (timeArray[0] * 60 * 60)+(timeArray[1]*60)+(timeArray[2]*1);
+				
+				// adds a second to previous calculated time for updating purposes
+				seconds++;
+
+				var printHours = Math.floor((seconds % (60 * 60 * 24)) / (60 * 60));
+				var printMinutes = Math.floor((seconds % (60 * 60)) / (60));
+				var printSeconds = Math.floor((seconds % 60));
+				if(printHours < 10){
+					printHours = "0"+printHours;
+				}
+				if(printMinutes < 10){
+					printMinutes = "0"+printMinutes;
+				}
+				if (printSeconds < 10){
+					printSeconds = "0"+printSeconds;
+				}
+
+				//Prints out updated elapsed time under the bar
+				$('#elapsed'+i).html(printHours+":"+printMinutes+":"+printSeconds);
+				
+				/* 
+				Calculates new width if seconds less than the max amount of oxygen or sets 
+				new width to the width of the background bar if greater than max amount of oxygen.
+				*/
+				if(seconds < maxOxygen){
+					var percentOygenLeft = seconds/maxOxygen
+					var newWidth = percentOygenLeft*maxBarWidth;
+					if(percentOygenLeft >= warningPercent){
+						inDanger++;
+					}
+				}
+				else{
+					var newWidth = maxBarWidth;
+					inDanger++;
+				}
+				$('#heat'+i).css({"width": newWidth});
+			}
+			/* 
+				Puts the number of members that are in the heat that have reached the "in danger" level of oxygen 
+				in the red circle by the team tracking tab and also makes it visible if not already.
+			*/
+			if(inDanger > 0){				
+				$('#circle').html(inDanger);
+				$('#circle').css({"visibility": "visible"});
+			}	
+		}
+		
+		////////////////////////////////////////////////////////////////////////////////
+		// Determines number of bars visible based on # of team members in the Heat Zone
+		////////////////////////////////////////////////////////////////////////////////
+		function numberVisible(){ 
+			var content = "";
+			//var numIn = document.getElementById('heatNum').innerHTML;
+			var numIn = $('#heatNum').html(); //number of people in heat
+			content += "number in heat: " + numIn +"<br>";
+			$('#measurements').html(content);
+			if(numIn > 3){
+				$('#person1,#person2,#person3').css({"visibility": "visible"});
+			}
+			else{
+				for(var i = 1; i <= numIn; i++){
+					$('#person' + i).css({"visibility": "visible"});
+				}
+			}
+		}
+
+		///////////////////////////////////////////////////////////////////////////////
+		// Set the position of the bullets in the Activity Feed along the Vertical Line
+		///////////////////////////////////////////////////////////////////////////////
+		function positionBullets(){
+			var content = "";
+			//var lineLeft = document.getElementById("vertLine").offsetLeft;
+			var lineLeft = $('#vertLine').position().left,
+				lineWidth = $('#vertLine').width(),
+				bulletWidth = $('.activityBullet').width();
+			content += "number in heat: " + lineLeft +"<br>" + lineWidth + "<br>" + bulletWidth + "<br>";
+			$('#measurements').html(content);			
+			//var bulletWidth = document.getElementById("vertLine").offsetWidth;
+			$('.activityBullet').css({"left":lineLeft - (bulletWidth-lineWidth)/2});
+		}
+
+		//////////////////////////////////////////////////////////////////////////////////
+		// Sets the height of the vertical line in the Activity Feed based on # of entries
+		//////////////////////////////////////////////////////////////////////////////////
+		function setVertLineHeight(){
+			var timeContainers = document.getElementsByClassName("timeContainer"),
+				newHeight = 0;
+			for (var i = 0; i < timeContainers.length; i++){
+				newHeight +=timeContainers[i].offsetHeight;
+			}
+			if(newHeight > document.getElementById("activityFeed").offsetHeight){
+				$('#vertLine').css({"height": newHeight});
+			}
+		}
+	</script>
+	
+</body>
+</html>

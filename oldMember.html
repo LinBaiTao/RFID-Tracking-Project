@@ -1,0 +1,362 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Team Members</title>
+	<link rel="stylesheet" href="site.css">
+	<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">	
+    <script type="text/javascript" src="scripts/uiButtonClicks.js"></script>
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+	<script type="text/javascript" src="testData.js"></script>
+	<script type="text/javascript" src="globalVariables.js"></script>
+	<!--<script type="text/javascript" src="rfidProvision.js"></script>-->
+</head>
+<body>
+	<div id="container">
+		<div id="header">
+			<img id="contactPicture" src="images/profile.jpg">
+			<div id="profileName">Aaron Durrence</div>
+			<div id="profileID">ID #28241</div>
+			<div class="tabs" id="dashboardTab" onclick="location.href='oldDash.html'">Dashboard</div>
+			<div class="tabs" id="trackingTab" onclick="location.href='oldTracking.html'">Team Tracking</div>
+			<div id="circle" onclick="location.href='oldTracking.html'"></div>
+			<div class="tabs" id="memberTab" onclick="location.href='oldMember.html'">Team Members
+				<div id="chosenTab"></div>
+			</div>
+			<div class="tabs" id="scannerTab" onclick="location.href='oldScanning.html'">Scan In/Out</div>
+			<div id="address">500 West Monroe, Chicago, IL 60605</div>
+			<div id="changeValues" onclick="setValues()">&#8942</div>
+		</div>
+		<div id="memberListContainer"></div>
+		<div id="memberDataContainer"></div>
+	</div>
+	<script>
+		// Set width of blue line under choosen tab
+		$(document).ready(function(){
+			getMaxOxygen();
+			getCheckpointNames();
+			setWidth();
+			setMembers();
+			setCircle();
+			enableClickFunction();
+		});
+
+		// Function called when vertical ellipses in top right corner clicked
+		function setValues(){
+			setMaxOxygen();
+			setCheckpointNames();
+		}
+
+		// Un-selects member currently selected and hides table on right to replace checkpoint names when next member clicked
+		function updateCheckpointNames(point1,point2){
+			$('#memberDataContainer').css("visibility", "");
+			$('.member').css("background-color","");
+		}
+
+		
+
+
+		//////////////////////////////////////////////////////////////////
+		// sets width of blue line under dashboard tab to the width of tab
+		//////////////////////////////////////////////////////////////////
+		function setWidth(){
+			var newWidth =  document.getElementById("memberTab").offsetWidth + "px";
+			document.getElementById("chosenTab").style.width = newWidth;
+		}
+
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		// sets size and position of circle above team tracking tab based on the size of window at load time
+		////////////////////////////////////////////////////////////////////////////////////////////////////
+		function setCircle(){
+			var tabTop = document.getElementById("trackingTab").offsetTop,
+				tabLeft = document.getElementById("trackingTab").offsetLeft,
+				tabWidth = document.getElementById("trackingTab").offsetWidth,
+				tabHeight = document.getElementById("trackingTab").offsetHeight,
+				windowHeight = window.innerHeight,
+				circleTop = tabTop - (tabHeight/2),
+				circleLeft = tabLeft + tabWidth +2;
+            /*var content = tabTop + "<br>" + tabLeft + "<br>" + tabWidth + "<br>" + tabHeight + "<br>" + windowHeight +"<br>" + circleTop + "<br>" + circleLeft + "<br>" + (tabHeight/windowHeight)*100;
+            $('#measurements').html(content);*/
+            $('#circle').css({"width": tabHeight, "height": tabHeight, "border-radius":tabHeight/2 + "px", "left": circleLeft, "top": circleTop});			
+		}
+		
+		///////////////////////////////////////////////////////////////////////////////////////////
+		// Add Box for each new member at the scene, and also check if currently in the heat zone
+		// to check wheather their oxygen is in the "danger zone" and to add to the red circle next 
+		// to the Team Tracking tab.
+		///////////////////////////////////////////////////////////////////////////////////////////
+		function setMembers(){
+			var namesAdded = [], // Names from data that have been added
+				content = "",
+				name,
+				id,
+				inDanger = 0, // number of members currently whose oxgen excedes the Danger Level
+				//maxOxygen = 10, // max amount of oxygen in minutes
+				dangerLevel = .9; // percent of max oxgen used that is considered dangerous
+			for (var i = 0; i <jsonData.length; i++){
+				name =jsonData[i].name;
+				id =jsonData[i].id;
+				if(namesAdded.indexOf(name)==-1){
+					//alert("hello")
+					namesAdded.push(name);
+					content += "<div class='member'><div class='memberInfo'>"+name+"<br>ID #"+id+"</div></div>";
+				}
+			}
+			$('#memberListContainer').html(content);
+			var height = $('#memberListContainer').height();
+			var margin = $('.member').css("margin-bottom");
+			margin =parseFloat(margin);
+			$('.member').css("height",height/8-margin);
+		}
+
+		//////////////////////////////////////
+		// What happens when a name is clicked 
+		//////////////////////////////////////
+		function enableClickFunction()	{
+			var counter;	
+			$('.memberInfo').click(function(){
+				clearInterval(counter); // stops the counter from previous clicked name
+				$('#memberDataContainer').css("visibility", ""); //Hides container when person not contained in JSON data clicked after one who is.
+				var htmlName = $(this).html().split('<br>')[0],
+					tempData = [],
+					content = "<table><tr id='0'><th class='rallyPointColumn'>Rally Point</th><th>Check In</th>"+
+							"<th>Elapsed Time</th><th>Check Out</th></tr>",
+					count = 0; // used to add to <tr> id so that can easily access html from certain row
+				$('.member').css("background-color",""); // resets background of all member boxes to defualt 
+				$('#memberDataContainer').html(content); // start table
+				content = "";
+				$(this).parent().css("background-color","rgba(0,0,0,.00)");	// changes background of selected member's box
+				for(var i = 0; i < jsonData.length; i++){
+					if (jsonData[i].name == htmlName){
+						$('#memberDataContainer').css("visibility", "visible"); // makes right-side table visible
+						var tempLocation = jsonData[i].location,
+							dataTime = jsonData[i].time, // time in format YYYY-MM-DDTHH:MM:SS.sss (optional Z at end)
+							split = dataTime.split(/[TZ]/),
+							date =split[0], // YYYY-MM-DD
+							time = split[1], // HH:MM:SS.sss
+							dateSplit = date.split('-'),
+							timeSplit = time.split(/[:.]/),
+							year = (dateSplit[0]),
+							month = (dateSplit[1]),
+							day = (dateSplit[2]),
+							hour = (timeSplit[0]),
+							minute = (timeSplit[1]),
+							second = (timeSplit[2]),
+							ms = (timeSplit[3]),
+							tempTime,
+							timeNow = new Date(dataTime).getTime(); //current time in ms
+						
+						if(hour >= 12){
+							if(hour == 12){
+								tempTime = hour+":"+minute+":"+second+ " PM";
+							}
+							else{
+								hour -= 12;
+								tempTime = hour+":"+minute+":"+second+ " PM";
+							}
+						}
+						else{
+							if(hour == 0){
+								hour = 12
+							}
+							tempTime = hour+":"+minute+":"+second+ " AM";
+						}
+
+						/*
+							Gets HTML to be added based on location contained in Data.
+							
+							If the count > 0, that means it calls the calcElapsedTime function used to calculate the 
+							elapsed time at a checkpoint a member was previously at
+
+							If count = 0, that means the member is at that current location and the running elapsed time
+							function is run for that checkpoint 
+						*/
+						if(tempLocation == "Heat"){
+							if(count > 0){
+								var getTime = $('#' +(count)+ ' .checkIn').html();
+								elapsedTime =calcElapsedTime(getTime,tempTime);
+								content += "<tr id='"+(count+1)+"' style='border-bottom-color: rgba(0,0,0,0)'><td class='rallyPointColumn'>" +
+									"Heat</td><td class='checkIn'></td><td class='elapsed'>"+elapsedTime +"</td><td class='checkOut'></td></tr>"+
+									"<tr id='"+(count+2)+"' style='border-bottom-color: rgba(0,0,0,0)'><td class='rallyPointColumn'>"+ point2 +"</td>"+
+									"<td class='checkIn'></td><td class='elapsed'></td><td class='checkOut'>"+tempTime +"</td></tr>";
+							}
+							else{
+								content += "<tr id='"+(count+1)+"' style='border-bottom-color: rgba(0,0,0,0)'><td class='rallyPointColumn'>" +
+									"Heat</td><td class='checkIn'></td><td class='elapsed'>"+timeNow+"</td><td class='checkOut'></td></tr>"+
+									"<tr id='"+(count+2)+"' style='border-bottom-color: rgba(0,0,0,0)'><td class='rallyPointColumn'>"+ point2 +"</td>"+
+									"<td class='checkIn'></td><td class='elapsed'></td><td class='checkOut'>"+tempTime +"</td></tr>";
+							}
+							$('#'+(count)+'').after(content);
+							content = "";				
+							count+=2;
+						}
+						else if(tempLocation == "Incident Staging"){
+							if (count > 0){
+								$('#' +(count)+ ' .checkIn').html(tempTime);
+								var getTime = $('#' +(count)+ ' .checkOut').html();
+								$('#' +(count)+ ' .elapsed').html(calcElapsedTime(getTime,tempTime));
+							}
+							else{
+								content += "<tr id='"+(count+1)+"' style='border-bottom-color: rgba(0,0,0,0);'><td class='rallyPointColumn'>"+ point2 +"</td>"+
+									"<td class='checkIn'>"+tempTime +"</td><td class='elapsed'>"+ timeNow+"</td><td class='checkOut'></td></tr>";
+								$('#'+(count)+'').after(content);
+								content = "";
+								count++;
+							}
+						}
+						else if(tempLocation == "In Transit to Incident Staging"){
+							if(count > 0){
+								var getTime = $('#' +(count)+ ' .checkIn').html();
+								elapsedTime = calcElapsedTime(getTime,tempTime);
+								content += "<tr id='"+(count+1)+"' style='border-bottom-color: rgba(0,0,0,0);'><td class='rallyPointColumn'>" +
+									"In Transit</td><td class='checkIn'></td><td class='elapsed'>"+elapsedTime +"</td><td class='checkOut'></td></tr>"+
+									"<tr id='"+(count+2)+"' style='border-bottom-color: rgba(0,0,0,0);'><td class='rallyPointColumn'>"+ point1 +"</td>"+
+									"<td class='checkIn'></td><td class='elapsed'></td><td class='checkOut'>"+tempTime +"</td></tr>";
+							}
+							else{
+								content += "<tr id='"+(count+1)+"' style='border-bottom-color: rgba(0,0,0,0);'><td class='rallyPointColumn'>" +
+									"In Transit</td><td class='checkIn'></td><td class='elapsed'>"+timeNow +"</td><td class='checkOut'></td></tr>"+
+									"<tr id='"+(count+2)+"' style='border-bottom-color: rgba(0,0,0,0);'><td class='rallyPointColumn'>"+ point1 +"</td>"+
+									"<td class='checkIn'></td><td class='elapsed'></td><td class='checkOut'>"+tempTime +"</td></tr>";
+							}
+							$('#'+(count)+'').after(content);
+							content = "";					
+							count+=2;
+						}
+						else if(tempLocation == "In Transit to Resource Control"){
+							if(count > 0){
+								var getTime = $('#' +(count)+ ' .checkIn').html();
+								elapsedTime = calcElapsedTime(getTime,tempTime);
+								content += "<tr id='"+(count+1)+"' style='border-bottom-color: rgba(0,0,0,0);'><td class='rallyPointColumn'>" +
+									"In Transit</td><td class='checkIn'></td><td class='elapsed'>"+elapsedTime +"</td><td class='checkOut'></td></tr>"+
+									"<tr id='"+(count+2)+"' style='border-bottom-color: rgba(0,0,0,0);'><td class='rallyPointColumn'>"+ point2 +"</td>"+
+									"<td class='checkIn'></td><td class='elapsed'></td><td class='checkOut'>"+tempTime +"</td></tr>";
+							}
+							else{
+								content += "<tr id='"+(count+1)+"' style='border-bottom-color: rgba(0,0,0,0);'><td class='rallyPointColumn'>" +
+									"In Transit</td><td class='checkIn'></td><td class='elapsed'>"+timeNow +"</td><td class='checkOut'></td></tr>"+
+									"<tr id='"+(count+2)+"' style='border-bottom-color: rgba(0,0,0,0);'><td class='rallyPointColumn'>"+ point2 +"</td>"+
+									"<td class='checkIn'></td><td class='elapsed'></td><td class='checkOut'>"+tempTime +"</td></tr>";
+							}
+							$('#'+(count)+'').after(content);
+							content = "";						
+							count+=2;
+						}
+						else{
+							if (count > 0){
+								$('#' +(count)+ ' .checkIn').html(tempTime);
+								var getTime = $('#' +(count)+ ' .checkOut').html();
+								$('#' +(count)+ ' .elapsed').html(calcElapsedTime(getTime,tempTime));
+							}
+							else{
+								content += "<tr id='"+(count+1)+"' style='border-bottom-color: rgba(0,0,0,0);'><td class='rallyPointColumn'>"+ point1 +"</td>"+
+									"<td class='checkIn'>"+tempTime +"</td><td class='elapsed'>"+ timeNow +"</td><td class='checkOut'></td></tr>";
+								$('#'+(count)+'').after(content);
+								content = "";
+								count++;
+							}
+						}
+					}
+				}
+				content += "</table>"; //close table
+				$('#headerRow').after(content); // writes HTML contained in the content string to page
+				$('#'+(count)+'').css("border-bottom-color",""); // adds a border to bottom of table
+
+
+				///////////////////////////////////////////////////////////////////////////////////////
+				// Gets the initial amount of milliseconds from the top row of the table (current time)
+				// and then runs a setInterval fuction to update the elapsed time every second
+				///////////////////////////////////////////////////////////////////////////////////////
+				var getInputMilliseconds = $('#1 .elapsed').html();
+				$('#1 .elapsed').html("00:00:00");
+				counter = setInterval(function(){				
+					runningElapsedTime(getInputMilliseconds);
+				},1000);
+
+
+				//////////////////////////////////////////////////////////////////////////
+				// Calculates the elapsed time for the checkpoint a member is currently at
+				//////////////////////////////////////////////////////////////////////////
+				function runningElapsedTime(inputTime){
+					var now = new Date().getTime();
+					var distance = now - inputTime;
+					var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+					var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+					var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+					if(hours < 10){
+						hours = "0"+hours;
+					}
+					if(minutes < 10){
+						minutes = "0"+minutes;
+					}
+					if (seconds < 10){
+						seconds = "0"+seconds;
+					}
+					$('#1 .elapsed').html(hours+":"+minutes+":"+seconds);
+				}
+			});	
+		}
+
+		///////////////////////////////////////////////////////////////////////
+		// Calculates the elapsed time for previous checkpoints a member was at
+		///////////////////////////////////////////////////////////////////////
+		function calcElapsedTime(time1, time2){
+			var time1Split = time1.split(/[: ]/),
+				time2Split = time2.split(/[: ]/),
+				time1Hours = time1Split[0],
+				time2Hours = time2Split[0],
+				time1Min = time1Split[1],
+				time2Min = time2Split[1],
+				time1Sec = time1Split[2],
+				time2Sec = time2Split[2],
+				elapsedHours,
+				elapsedMinutes,
+				elapsedSeconds;
+			if(time1Split[2] == "PM"){
+				time1Hours = (time1Hours*1) + 12;
+			}
+			if(time2Split[2] == "PM"){
+				time2Hours = (time2Hours*1) + 12;
+			}
+
+			if(time1Hours - time2Hours < 0){
+				elapsedHours = (24-time2Hours) + (time1Hours*1);
+			}
+			else{
+				elapsedHours = time1Hours-time2Hours;
+			}
+
+			if(time1Min - time2Min < 0){
+				elapsedHours = elapsedHours - 1;
+				elapsedMinutes = (60-time2Min) + (time1Min*1);
+				
+			}
+			else{
+				elapsedMinutes = time1Min - time2Min;
+			}
+
+			if(time1Sec - time2Sec < 0){
+				elapsedMinutes = elapsedMinutes - 1;
+				elapsedSeconds = (60-time2Sec) + (time1Sec*1);
+				
+			}
+			else{
+				elapsedSeconds = time1Sec - time2Sec;
+			}
+			
+
+			if(elapsedHours < 10){
+				elapsedHours = "0" + elapsedHours;
+			}
+			if(elapsedMinutes < 10){
+				elapsedMinutes = "0" + elapsedMinutes;
+			}
+			if(elapsedSeconds < 10){
+				elapsedSeconds = "0" + elapsedSeconds;
+			}
+			return elapsedHours + ":" + elapsedMinutes + ":" + elapsedSeconds;
+		}
+	</script>
+</body>
+</html>

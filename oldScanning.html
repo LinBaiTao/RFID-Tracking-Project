@@ -1,0 +1,206 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Scanning</title>
+	<link rel="stylesheet" href="site.css">
+	<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">	
+    <script type="text/javascript" src="scripts/uiButtonClicks.js"></script>
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+	<script type="text/javascript" src="globalVariables.js"></script>
+    <!--<script type="text/javascript" src="rfidProvision.js"></script>-->
+</head>
+<body>
+	<div id="container">
+		<div id="header">
+			<img id="contactPicture" src="images/profile.jpg">
+			<div id="profileName">Aaron Durrence</div>
+			<div id="profileID">ID #28241</div>
+			<div class="tabs" id="dashboardTab" onclick="location.href='oldDash.html'">Dashboard</div>
+			<div class="tabs" id="trackingTab" onclick="location.href='oldTracking.html'">Team Tracking</div>
+			<div class="tabs" id="memberTab" onclick="location.href='oldMember.html'">Team Members</div>
+			<div class="tabs" id="scannerTab" onclick="location.href='oldScanning.html'">Scan In/Out
+                <div id="chosenTab"></div>
+            </div>
+            
+            <div id="address">500 West Monroe, Chicago, IL 60605</div>
+            <div id="changeValues" onclick="setValues()">&#8942</div>
+		</div>
+		<div id="highlightContainer">
+			<h2>Choose which location you are scanning for:</h2>
+			<button id="resource" onclick="getResource()"></button>
+			<button id="incident" onclick="getIncident()"></button>
+			<div id="scanning"></div>
+		</div>
+        <div id="activityFeedContainer" style="overflow-y: auto">
+            <div id="activityFeedHeader">Activity Feed</div>
+			<div id="activityFeed">
+			</div>
+        </div>
+	</div>
+
+<script>
+        $(document).ready(function(){
+			getMaxOxygen();
+			getCheckpointNames();
+			setWidth();
+        });
+
+        //////////////////////////////////////////////////
+        // Hardcoded names associated with barcode numbers
+        //////////////////////////////////////////////////
+        var p1 = {first:"Aaron", last:"Durrence", id:87376173},
+            p2 = {first:"Jordan", last:"Gillmore", id:6237167412784761},
+            p3 = {first:"Katherine", last:"Mohr", id:2365417625424},
+            p4 = {first:"Natalie", last:"Brown", id:7823164762134},
+            p5 = {first:"Sonu", last:"Dhillon", id:2146342678436},
+            p6 = {first:"Nick", last:"Scott", id:12345678900987},
+            p7 = {first:"Scott", last:"Huang", id:267362834216};
+
+
+        var scannerLocation;
+
+        // Function called when vertical ellipses in top right corner clicked
+        function setValues(){
+			setMaxOxygen();
+			setCheckpointNames();
+        }
+        
+        // Updates checkpoint names in buttons to select scanning location
+        function updateCheckpointNames(point1,point2){
+			$('#resource').html(point1);
+			$('#incident').html(point2);
+		}
+
+
+        //////////////////////////////////////////////////////////////////
+		// sets width of blue line under dashboard tab to the width of tab
+		//////////////////////////////////////////////////////////////////
+        function setWidth(){
+            var newWidth =  document.getElementById("scannerTab").offsetWidth + "px";
+            document.getElementById("chosenTab").style.width = newWidth;
+        }
+        
+
+        ////////////////////////////////////////////////////////
+        // Sets HTML when you click scanning at Incident Staging
+        ////////////////////////////////////////////////////////
+        function getIncident(){
+            scannerLocation = "incident";
+            var content =  "<br>"+ point2 +" Barcode Scanning <br><br><label>Information:</label><br><textarea id='info' rows='10'>"+
+                "</textarea><br><br><input type='radio' name='direction' value='arriving'>Arriving at Checkpoint<br>"+
+                "<input type='radio' name='direction' value='toHeat'>Departing into Heat Zone<br>" +
+                "<input type='radio' name='direction' value='toResource'>Departing towards "+ point1 +"<br><br>"+
+                "<button onclick='onSubmit()' style='width:100% '>Submit</button>";
+            $('#scanning').html(content);
+            $('#info').focus();
+        }
+
+
+        ////////////////////////////////////////////////////////
+        // Sets HTML when you click scanning at Resource Control
+        ////////////////////////////////////////////////////////
+        function getResource(){
+           scannerLocation = "resource";
+            var content =  "<br>"+ point1 +" Barcode Scanning<br><br><label>Information:</label><br><textarea id='info' rows='10'>"+
+                "</textarea><br><br><input type='radio' name='direction' value='arriving'>Arriving at Checkpoint<br>"+
+                "<input type='radio' name='direction' value='toIncident'>Departing towards "+ point2 +"<br><br>"+
+                "<button onclick='onSubmit()' style='width:100%'>Submit</button>";
+            $('#scanning').html(content);
+            $('#info').focus();
+        }
+
+
+        ///////////////////////////////////////////////////////////////////////////
+        // Gets id # from text area and value from checked radio button then
+        // outputs the following in the activity feed column on the right: id #, 
+        // the name associated with that id # from above, the location they will be
+        // at after scanning in/out, and the time at which they checked-in/out.
+        /////////////////////////////////////////////////////////////////////////// 
+        function onSubmit(){
+            var idNums = document.getElementById("info").value.split("\n");
+            var selectedDirection = $('input[name=direction]:checked').val();
+            var today = new Date().getTime(),
+                offset = new Date().getTimezoneOffset(),
+                hours = Math.floor((today % (1000*60 * 60 * 24)) / (1000*60 * 60))-(offset/60),
+				minutes = Math.floor((today % (1000*60 * 60)) / (1000*60)),
+                timePressed = hours + ":" + minutes,
+                locationID,
+                name,
+                id;
+
+            /////////////////////////////////////////////////////////
+            // Determining current locationID based on where scanning
+            /////////////////////////////////////////////////////////
+            if (scannerLocation == "incident"){
+                if(selectedDirection == 'arriving'){
+                    var positionOutput = point2;
+                    locationID = "004";
+                }
+                if(selectedDirection == 'toHeat'){
+                    var positionOutput = "Heat";
+                    locationID = "005";
+                }
+                if(selectedDirection == 'toResource'){
+                    var positionOutput = "In Transit to "+ point1 +"";
+                    locationID = "003";
+                }
+            }
+            else if(scannerLocation == "resource"){
+                if(selectedDirection == 'arriving'){
+                    var positionOutput = point1;
+                    locationID = "001";
+                }
+                if (selectedDirection == "toIncident"){
+                    var positionOutput = "In Transit to "+ point2 +"";
+                    locationID = "002";
+                }
+            }
+            for(var i = 0; i < idNums.length-1; i++)
+            {
+                if(idNums[i] == 87376173){
+                    id =Number(idNums[i]);
+                    name = p1.first +" "+ p1.last;
+                }
+                if(idNums[i] == 6237167412784761){
+                    id =Number(idNums[i]);
+                    name = p2.first +" "+ p2.last;
+                }
+                if(idNums[i] == 2365417625424){
+                    id =Number(idNums[i]);
+                    name = p3.first +" "+ p3.last;
+                }
+                if(idNums[i] == 7823164762134){
+                    id =Number(idNums[i]);
+                    name = p4.first +" "+ p4.last;
+                }
+                if(idNums[i] == 2146342678436){
+                    id =Number(idNums[i]);
+                    name = p5.first +" "+ p5.last;
+                }
+                if(idNums[i] == 12345678900987){
+                    id =Number(idNums[i]);
+                    name = p6.first +" "+ p6.last;
+                }
+                if(idNums[i] == 267362834216){
+                    id =Number(idNums[i]);
+                    name = p7.first +" "+ p7.last;
+                }
+                var content = "<p>ID: " + id + "<br> Name: " + name+ "<br> Position: " + positionOutput+
+                    "<br> Time: " +timePressed +"</p>";
+                $('#activityFeed').prepend(content);
+                content = "";
+            }
+
+            document.getElementById("info").value = "";
+
+            $('input[name=direction]').attr('checked', false);
+            
+            $(document).ready(function () {
+                $('#info').focus();
+            });
+        }
+	</script>
+</body>
+</html>

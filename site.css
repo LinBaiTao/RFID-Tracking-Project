@@ -1,0 +1,654 @@
+@charset "utf-8";
+/* CSS Document */
+
+body{
+	margin: 0;
+	padding: 0;
+	background-color: #142737;
+	color: #ffffff;
+	font-family: roboto;
+}
+
+#container{
+    position: fixed;
+	width: 100%;
+	height: 100%;	
+}
+::-webkit-scrollbar {
+    width: 12px;
+}
+ 
+::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); 
+    border-radius: 10px;
+}
+ 
+::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 6px #D8D8D8;
+	/*background-color: #D8D8D8;*/
+}
+
+/*****************
+CSS for the Header
+*****************/
+#header{
+    width: 100%;
+    height: 16.7%;/*180px;*/
+    background-color: #0D1B24;
+	position: fixed;
+	bottom: 83.3%;
+}
+#contactPicture{
+    width: 3.8%;
+    height: 4.4%;
+    position: fixed;
+    left: 2.3%;
+	top: 3.1%;
+}
+#profileName{
+	width: 350px;
+	height: 3.1%;
+	position: fixed;
+	left: 7.7%;
+	top: 2.7%;
+	/*bottom: 94.3%;*/
+	font-family: roboto;
+	font-weight: bold;
+	font-size: 3.1vh;
+	color: #FFFFFF;
+	letter-spacing: 1px;
+	line-height: 3.1vh;
+}
+#profileID{
+	width: 139px;
+	height: 1.9%;
+	position: fixed;
+	left: 7.7%;
+	top: 5.8%;
+	/*bottom: 92.3%;
+	font-family: roboto;*/
+	font-size: 1.9vh;
+	/*color: #FFFFFF;*/
+	line-height: 1.9vh;
+}
+.tabs{
+	height: 2.3%;
+	font-family: roboto;
+	font-size: 2.3vh;
+	letter-spacing: 0.92px;
+	position: fixed;
+	top: 12%;
+	bottom: 85.7%;
+}
+.tabs:hover{
+	background-color: #142737;
+	cursor: pointer;
+}
+#dashboardTab{
+	left: 2.3%;
+}
+#trackingTab{
+	left: 19.5%;
+}
+#memberTab{
+	left: 42.5%;
+}
+#scannerTab{
+	left: 65%;
+}
+#chosenTab{
+	background-color: #0063B0;
+	height: .9%;
+	left: inherit;
+	top: 15.7%;
+	position: fixed;
+}
+#address{
+	position: fixed;
+	width: 26.3%;
+	height: 3.1%;
+	right: 4%;
+	top: 3.2%;
+	font-size: 3.1vh;
+	text-align: right;
+}
+#changeValues{
+	position: fixed;
+	width: .5%;
+	height: 3.1%;
+	right: 2%;
+	top: 3.2%;
+	font-size: 3.1vh;
+	text-align: right;
+}
+#changeValues:hover{
+	cursor: pointer;
+}
+#circle{
+	position: fixed;
+	justify-content: center;
+	text-align: center;
+	visibility: hidden;
+	background-color: #D0021B;
+	font-size: 1.8vh;
+}
+#circle:hover{
+	cursor: pointer;
+}
+
+
+
+/**********************
+CSS for Dashboard Page
+**********************/
+#highlightContainer{
+	width: 41.6%;
+	position: fixed;
+	left: 4.7%;
+	top: 21.3%;
+	bottom: 3.3%;
+}
+
+
+.sectionTitle{
+	width: 46.3%;
+	height: 4.6%;
+	background-color: #0D1B24;
+	position: fixed;
+	left: 2.3%;
+	/*text-indent: 29px;
+	vertical-align: middle;*/
+}
+
+#heatHighlightHeader{
+	top: 21.3%;
+	bottom: 74.1%;
+}
+
+
+#rallyPointHeader{
+	top: 60.9%;
+	bottom: 34.4%;
+}
+
+.sectionTitleText{
+	font-family: roboto;
+	font-weight: bold;
+	font-size: 2.3vh;
+	position: absolute;
+	top: 25%;
+	bottom: 25%;
+	left: 5%;
+	letter-spacing: 0;
+}
+
+
+.personContainer{
+	visibility: hidden;
+}
+.heatName{
+	/*width: 13.5%;*/
+	height: 1.9%;
+	font-family: roboto;
+	font-weight: bold;
+	font-size: 1.9vh;
+	letter-spacing: 1px;
+	position: fixed;
+	left: 4.7%;
+}
+
+#name1{
+	top: 29%;
+	bottom: 69.1%;
+}
+
+#name2{
+	top: 39.2;
+	bottom: 58.9%;
+}
+
+#name3{
+	top: 49.4%;
+	bottom: 48.7%;
+}
+
+.bar{
+	position: fixed;
+	left: 4.7%;
+	height: 1.7%;
+}
+.heat{
+	background-color: #D0011B;
+}
+.background{
+	background-color: rgba(255,255,255,0.2);
+	width: 41.6%;
+}
+.bar1{
+	top: 32.1%;
+	bottom: 66.2%;
+}
+.bar2{
+	top: 42.2%;
+	bottom: 56.1%;
+}
+.bar3{
+	top: 52.4%;
+	bottom: 45.9%;
+}
+#heat1{
+	width: 40.9%;
+}
+#heat2{
+	width: 38.9%;
+}
+#heat3{
+	width: 36.6%;
+}
+.heatElapsed{
+	width: 8.1%;
+	height: 1.9%;
+	position: fixed;
+	left: 4.7%;
+	font-family: roboto;
+	font-size: 1.9vh;
+}
+#elapsed1{
+	top: 34.6%;
+	bottom: 63.5%;
+}
+#elapsed2{
+	top: 44.7%;
+	bottom: 53.4%;
+}
+#elapsed3{
+	top: 54.9%;
+	bottom: 43.2%;
+}
+#totalTeamNum{
+	/*width: inherit;
+	/*height: 4.5%;*/
+	font-weight: bold;
+	font-size: 4.5vh;
+	letter-spacing: 0;
+	position: static;
+	/*left: 4.7%;
+	top: 69.2%;
+	bottom: 26.3%;*/
+	text-align: center;
+}
+.rallyText{
+	width: inherit;
+	font-size: 1.9vh;
+	letter-spacing: 0;
+	text-align: center;
+	position: fixed;
+}
+#totalLabel{
+	top: 73.7%;
+	bottom: 24.4%;
+}
+#chartContainer{
+	width: inherit;
+	position: fixed;
+	top: 69.2%;
+	bottom: 3.3%;
+}
+.line{
+	background-color: #43525F;
+	position: fixed;
+}
+.vertical.line{
+	width:.3%;
+	height: 2.8%;
+}
+.horizontal.line{
+	height: .4%;
+}
+#line1{
+	/*align-content: center;*/
+	top: 76.2%;
+	left: 25.3%;
+}
+#line2{
+	width: 31.5%;
+    top: 79%;
+    left: 9.7%;
+}
+#line3{
+	top: 79%;
+	left: 9.7%;
+}
+#line4{
+	top: 79%;
+	left: 20.1%;
+}
+#line5{
+	top: 79%;
+	left: 30.5%;
+}
+#line6{
+	top: 79%;
+	left: 40.9%;
+}
+#boxContainer{
+	width: inherit;
+	position: fixed;
+	height: 9.3%;
+	top: 79.4%;
+	bottom: 11.4%;
+	font-size: 0; /*Gets rid of whitespace between boxes*/
+}
+.box{
+	position: static;
+	width: 25%;
+	height: 100%;
+	display: inline-block;
+	/*left: 4.7%;
+	top: 79.4%;
+	bottom: 11.4%;*/
+}
+.boxNumber{
+	width: 10.4%;
+	position: fixed;
+	top: 82.4%;
+	height: 3.9%;
+	font-size: 3.9vh;
+	text-align: center;
+}
+.boxLabel{
+	top: 86.4%;
+	bottom: 11.7%;
+	width: 10.4%;
+	font-size: 1.9vh;
+	letter-spacing: 0;
+	text-align: center;
+	position: fixed;
+}
+#activityFeedContainer{
+	width: 46.3%;
+	position: fixed;
+	top: 21.3%;
+	right: 2.5%;
+	bottom: 3.3%;
+	background-color: #0D1B24;
+}
+#activityFeedHeader{
+	position: fixed;
+	top: 22.4%;
+	left: 52.8%;
+	font-size: 2.3vh;
+	font-weight: bold;
+}
+#activityFeed{
+	position: fixed;
+	right: 3.5%;
+	bottom: 3.3%;
+	top: 29%;
+	width: 44%;
+	overflow-y: auto;
+}
+#vertLine{
+	width: 4px;
+	height: 100%;
+	position: absolute;
+	left: 2%;
+	background-color: #43525F;
+}
+.activityBullet{
+	position: relative;
+	width: 20px;
+	height: 20px;
+	border-radius: 10px;
+	background-color: #D8D8D8;
+	display: block;
+	float: left;
+}
+.timeContainer{
+	display: flex;
+	position: relative;
+	/*width: 100%;
+	height: auto;*/
+}
+.timeText{
+	display: block;
+	float: left;
+	padding-left: 4%;
+	padding-bottom: 3%;
+	font-weight: bold;
+}
+.activityText{
+	font-weight: normal;
+}
+
+/********************
+CSS forTracking Page
+********************/
+#trackingContainer{
+	position: fixed;
+	visibility: hidden;
+	width: 95%;
+	max-height: 75.4%;
+	left: 2.5%;
+	top: 21.3%;
+	overflow-y: auto;
+	background-color: #0D1B24;
+	border-left: 3px solid #0D1B24;
+	border-right: 3px solid #0D1B24;
+}
+.trackingLine{
+	position: relative;
+	width: 100%;
+	height: 3px;
+	/*top: 33.3%;*/
+	background-color: #979797;
+	z-index: 1;
+}
+.entryContainer{
+	width: 100%;
+	background-color: #142737;
+	height: 9.1vh;
+	display: flex;
+	position: relative;
+	margin-bottom: 3px;
+	font-size: 1.9vh;
+}
+.trackingTimeText{
+	position: absolute;
+	width: 100%;
+	bottom: 0;
+	padding-bottom:10px;
+}
+.heatColumn .trackingTimeText{
+	width: 20%;
+}
+.heatColumn{
+	position: relative;
+	width: 30%;
+	padding-left: 5%;
+}
+.rcColumn{
+	position: relative;
+	text-align: left;
+	width: 17.6%;
+}
+.itColumn{
+	position: relative;
+	text-align: center;
+	width: 17.6%;
+	/*display: flex;*/
+}
+.isColumn{
+	position: relative;
+	text-align: right;
+	width: 17.6%;
+}
+.nameColumn{
+	position: relative;
+	text-align: left;
+	padding-left: 2%;
+	width: 17%;
+	font-size: 2.5vh;
+}
+.headerRow{
+	background-color: #0D1B24;
+	display:flex;
+    align-items: center;
+	letter-spacing: 2px;
+	font-size: 16px;
+	font-weight: bold;
+}
+.trackingBackgroundBar{
+	position: absolute;
+	background-color: rgba(255,255,255,0.2);
+	z-index: 2;
+}
+.trackingHeatBar{
+	position: absolute;
+	background-color: #D0011B;
+	z-index: 3;
+}
+.checkedOutCircle{
+	position: absolute;
+	border: 3px solid #979797;
+	border-radius: 50%;
+	/*opacity: 0.6;*/
+	width: 14px;
+	height: 14px;
+	background-color: #142737;
+	z-index: 2;
+}
+.checkedInCircle{
+	border: 3px solid #ffffff;
+	position: absolute;
+	border-radius: 50%;
+	/*opacity: 0.6;*/
+	width: 14px;
+	height: 14px;
+	background-color: #ffffff;
+	z-index: 2;
+}
+.arrow-right {
+  width: 0px; 
+  height: 0px; 
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-left: 20px solid #ffffff;
+  position: absolute;
+  z-index: 2;
+}
+.arrow-left {
+  width: 0px; 
+  height: 0px; 
+  border-top: 10px solid transparent;
+  border-bottom: 10px solid transparent;
+  border-right: 20px solid #ffffff;
+  position: absolute;
+  z-index: 2;
+}
+
+
+/****************************
+CSS For Team Members Page
+*****************************/
+#memberListContainer{
+	position: fixed;
+	width: 46.3%;
+	top: 21.1%;
+	left: 2.4%;
+	bottom: 3.3%;
+	overflow-y: auto;
+	
+}
+.member{
+	width: 100%;
+	background-color: #0D1B24;
+	height: 9vh;
+	display: flex;
+	position: relative;
+	/*border-left: 3px solid lime;
+	border-right: 3px solid lime;
+	border-bottom: 3px solid lime;*/
+	margin-bottom: 3px;
+	font-size: 3vh; 
+	cursor: pointer;
+	/*padding-bottom: 1vh;
+	padding-top: 1vh;
+	padding-left: 1.6vw;*/
+}
+.member:hover{
+	background-color: rgba(0,0,0,0.00);
+}
+.memberInfo{
+	padding-bottom: 1vh;
+	padding-top: 1vh;
+	padding-left: 1.6vw;
+	width: inherit;
+}
+#memberDataContainer{
+	position: fixed;
+	width: 46.3%;
+	right: 2.6%;
+	top: 21.1%;
+	bottom: 3.3%;
+	visibility: hidden;
+	overflow-y: auto;
+}
+#memberDataContainer th{
+	background-color: rgba(0,0,0,0);
+	letter-spacing: 2px;
+	width: 22%;
+	text-align: left;
+}
+#memberDataContainer tr{
+	/*border-color: rgba(0,0,0,0);*/
+	height: 5.5vh; 
+	font-size: 1.9vh;
+	letter-spacing: .92px;
+	border-bottom: 4px solid #0D1B24;
+	
+}
+#memberDataContainer table{
+	/*height: 100%;*/
+	width: 100%;
+	border: 4px solid #0D1B24;
+	border-collapse: collapse;
+	
+}
+#memberDataContainer .rallyPointColumn {
+	padding-left: 3%;
+	width: 34%;
+	text-align: left;
+}
+
+
+/********************
+CSS for Scanning Page
+********************/
+button{
+	background-color: #0D1B24;
+	border-radius: 15px;
+	border: 2px solid #0D1B24;
+	color: #ffffff;
+	width: 49%;
+	height: 5%;
+	font-family: roboto;
+	letter-spacing: 1px;
+	cursor: pointer;
+}
+button:hover{
+	background-color: rgba(0,0,0,0);
+}
+textarea{
+	background-color: #0D1B24;
+	font-family: roboto;
+	color: #ffffff;
+	width: 100%;
+	outline: 0px;
+	border: 0px;
+}
+
+
+
+

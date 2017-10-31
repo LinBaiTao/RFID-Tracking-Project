@@ -1,0 +1,488 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Team Tracking</title>
+	<link rel="stylesheet" href="site.css">
+	<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">	
+    <script type="text/javascript" src="scripts/uiButtonClicks.js"></script>
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+	<script type="text/javascript" src="testData.js"></script>
+	<script type="text/javascript" src="globalVariables.js"></script>
+</head>
+<body>
+	<div id="container">
+		<div id="header">
+			<img id="contactPicture" src="images/profile.jpg">
+			<div id="profileName">Aaron Durrence</div>
+			<div id="profileID">ID #28241</div>
+			<div class="tabs" id="dashboardTab" onclick="location.href='oldDash.html'">Dashboard</div>
+			<div class="tabs" id="trackingTab" onclick="location.href='oldTracking.html'">Team Tracking
+				<div id="chosenTab"></div>
+			</div>
+			<div class="tabs" id="memberTab" onclick="location.href='oldMember.html'">Team Members</div>
+			<div class="tabs" id="scannerTab" onclick="location.href='oldScanning.html'">Scan In/Out</div>
+			<div id="address">500 West Monroe, Chicago, IL 60605</div>
+			<div id="changeValues" onclick="setValues()">&#8942</div>
+		</div>
+		<div id="trackingContainer">
+			<div class="entryContainer" id="entry0">
+				<div class="nameColumn headerRow">Name</div>
+				<div class="headerRow rcColumn">Resouce Control</div>
+				<div class="itColumn headerRow" style="justify-content: center">In Transit</div>
+				<div class="isColumn headerRow " style="justify-content: flex-end">Incident Staging</div>
+				<div class="heatColumn headerRow">Heat</div>
+			</div>
+		</div>
+	</div>
+	<script>
+		var containerHeight = $('#trackingContainer').height();
+		var testH = $('.itColumn').height();
+		var testw = $('.itColumn').width();
+
+		$(document).ready(function(){
+			getMaxOxygen();
+			getCheckpointNames();
+			setWidth();
+			addEntries();
+			dimElements();
+			setPositioning();
+			$('#trackingContainer').css("visibility", "visible");
+		});
+
+
+		
+		// Function called when vertical ellipses in top right corner clicked
+		function setValues(){
+			setMaxOxygen();
+			setCheckpointNames();
+		}
+
+		//Updates checkpoint names in header row of tracking table
+		function updateCheckpointNames(point1,point2){
+			$('.rcColumn.headerRow').html(point1);
+			$('.isColumn.headerRow').html(point2);
+		}
+
+	
+
+		
+		//////////////////////////////////////////////////////////////////
+		// sets width of blue line under dashboard tab to the width of tab
+		//////////////////////////////////////////////////////////////////
+		function setWidth(){
+			var newWidth =  document.getElementById("trackingTab").offsetWidth + "px";
+			document.getElementById("chosenTab").style.width = newWidth;
+		}
+
+		////////////////////////////////////////////
+		// Adds rows for each member at the scene
+		////////////////////////////////////////////
+		function addEntries(){
+			var namesAdded = [],
+				content = "",
+				count = 1, // used to form each rows ID in the form of 'entry'+count#" (entry1)
+
+				/*
+					index of the last entry that is currently at that position to know which row to place the next
+					row after. ex: the index of the last in the heat is 4 and you have a new member currently at 
+					Incident staging you know you want to insert the HTML for that member after the div with an
+					id of "entry4"
+				*/
+				indexLastHeat = 0,
+				indexLastInIS = 0,
+				indexLastInTransit = 0,
+				indexLastInRC = 0;
+
+			for(var i = 0; i < jsonData.length; i++){
+				var name =jsonData[i].name;
+				var location =jsonData[i].location;
+				var time =jsonData[i].time;
+				var splitTime = time.split(/[TZ]/)[1],
+					timeSplit = splitTime.split(/[:.]/),
+					hour = timeSplit[0],
+					minute = timeSplit[1],
+					seconds = timeSplit[2],
+					tempTime;
+				if(hour >= 12){
+					if(hour == 12){
+						tempTime = hour+":"+minute+" PM";
+					}
+					else{
+						hour -= 12;
+						tempTime = hour+":"+minute+ " PM";
+					}
+				}
+				else{
+					if(hour == 0){
+						hour = 12;
+					}
+					tempTime = hour+":"+minute+" AM";
+				}
+
+				/*
+					Sets the HTML of that members row based on their current location (1st occurence in the data)
+				*/
+				if(namesAdded.indexOf(name)==-1){
+					namesAdded.push(name);
+					if(location == "Heat"){
+						//alert(count);
+						content +="<div class='entryContainer' id='entry"+count+"'><div class='nameColumn'>"+name+
+						"</div><div class='rcColumn'><div class=' trackingLine'></div><div class='checkedOutCircle'></div>"+
+						"<div class='trackingTimeText'></div>"+
+						"</div><div class='itColumn'><div class='trackingLine'></div>"+
+						"</div><div class='isColumn'><div class='trackingLine'></div><div class='checkedOutCircle' style='right: 0%'></div>"+
+						"<div class='trackingTimeText'>"+tempTime+"</div></div><div class='heatColumn'><div class='trackingBackgroundBar'></div>"+
+						"<div class='trackingHeatBar'></div><div class='trackingTimeText'>"+calcElapsedTime(time)+"</div></div></div>";
+						if(indexLastHeat == 0){
+							indexLastHeat = count;
+						}
+						count++;
+						$('#entry0').after(content);
+						content= "";
+					}
+					if(location == "Incident Staging"){
+						content +="<div class='entryContainer' id='entry"+(count)+"'><div class='nameColumn'>"+name+
+						"</div><div class='rcColumn'><div class=' trackingLine'></div><div class='checkedOutCircle'></div>"+
+						"<div class='trackingTimeText'></div>"+
+						"</div><div class='itColumn'><div class='trackingLine'></div>"+
+						"</div><div class='isColumn'><div class='trackingLine'></div><div class='checkedInCircle' style='right: 0%'></div>"+
+						"<div class='trackingTimeText'>"+calcElapsedTime(time)+"</div></div><div class='heatColumn'></div></div>";
+						if(indexLastInIS == 0){
+							indexLastInIS = count
+						}
+						count++;
+						$('#entry'+indexLastHeat).after(content);
+						content = "";
+					}
+					if(location == "In Transit to Incident Staging"){
+						content+= "<div class='entryContainer' id='entry"+(count)+"'><div class='nameColumn'>"+name+
+						"</div><div class='rcColumn'><div class=' trackingLine'></div><div class='checkedOutCircle'></div>"+
+						"<div class='trackingTimeText'>"+tempTime+"</div>"+
+						"</div><div class='itColumn'><div class='trackingLine'></div>"+
+						"<div class='arrow-right'></div><div class='trackingTimeText'>"+calcElapsedTime(time)+"</div>"+
+						"</div><div class='isColumn'><div class='trackingLine'></div><div class='checkedOutCircle' style='right: 0%'></div>"+
+						"<div class='trackingTimeText'></div></div><div class='heatColumn'></div></div>";
+						if(indexLastInTransit == 0){
+							indexLastInTransit = count;
+						}
+						count++;
+						$('#entry'+indexLastInIS).after(content);
+						content = "";
+					}
+					if(location == "In Transit to Resource Control"){
+						content+= "<div class='entryContainer' id='entry"+(count)+"'><div class='nameColumn'>"+name+
+						"</div><div class='rcColumn'><div class=' trackingLine'></div><div class='checkedOutCircle'></div>"+
+						"<div class='trackingTimeText'></div>"+
+						"</div><div class='itColumn'><div class='trackingLine'></div>"+
+						"<div class='arrow-left'></div><div class='trackingTimeText'>"+calcElapsedTime(time)+"</div>"+
+						"</div><div class='isColumn'><div class='trackingLine'></div><div class='checkedOutCircle' style='right: 0%'></div>"+
+						"<div class='trackingTimeText'>"+tempTime+"</div></div><div class='heatColumn'></div></div>";
+						if(indexLastInTransit == 0){
+							indexLastInTransit = count;
+						}
+						count++;
+						$('#entry'+indexLastInIS).after(content);
+						content = "";
+					}
+					if(location == "Resource Control"){
+						content+= "<div class='entryContainer' id='entry"+(count)+"'><div class='nameColumn'>"+name+
+						"</div><div class='rcColumn'><div class=' trackingLine'></div><div class='checkedInCircle'></div>"+
+						"<div class='trackingTimeText'>"+calcElapsedTime(time)+"</div>"+
+						"</div><div class='itColumn'><div class='trackingLine'></div>"+
+						"</div><div class='isColumn'><div class='trackingLine'></div><div class='checkedOutCircle' style='right: 0%'></div>"+
+						"<div class='trackingTimeText'></div></div><div class='heatColumn'></div></div>";
+						if(indexLastInRC == 0){
+							indexLastInRC = count;
+						}
+						count++;
+						$('#entry'+indexLastInTransit).after(content);
+						content = "";
+					}
+				}
+				/*
+					Puts the most recent checkout times of each checkpoint that member currently isn't at
+				*/ 
+				else{
+					var id;
+					if(location == "In Transit to Resource Control") {
+						if(($('.nameColumn:contains('+name+')').length > 0)){
+							id = $('.nameColumn:contains('+name+')').parent().attr('id');
+						}
+						if($('#' +id + ' .isColumn .trackingTimeText').html() == ""){
+							$('#' +id + ' .isColumn .trackingTimeText').html(tempTime);
+						}
+					}
+					if(location == "In Transit to Incident Staging") {
+						if(($('.nameColumn:contains('+name+')').length > 0)){
+							id = $('.nameColumn:contains('+name+')').parent().attr('id');
+						}
+						if($('#' +id + ' .rcColumn .trackingTimeText').html() == ""){
+							$('#' +id + ' .rcColumn .trackingTimeText').html(tempTime);
+						}
+					}
+				}
+			}
+
+			//////////////////////////////////////////////////////////////////////////////////////////
+			// Updates the Heat bar width and elapsed time text under current positioning every second
+			////////////////////////////////////////////////////////////////////////////////////////// 
+			var counter = setInterval(function(){
+				updateHeatBar();
+				updateElapsed();
+				//alert(seconds);
+			},1000);
+			
+			///////////////////////////////////////////////////////////
+			// Sets width of red bar based on percentage of oxygen used
+			/////////////////////////////////////////////////////////// 
+			function updateHeatBar(){
+				var maxBarWidth = $('.trackingBackgroundBar').width();
+				//var maxOxygen = 600; //10 min in seconds
+				var warningPercent = 0.9; //value between 0-1
+				//seconds++;
+				for (var i = 0; i < $('.heatColumn .trackingTimeText').length; i++){
+					var elapsedTime =  $('.heatColumn .trackingTimeText').eq(i).html();
+					var timeArray = elapsedTime.split(':');
+					var seconds = (timeArray[0] * 60 * 60)+(timeArray[1]*60)+(timeArray[2]*1);
+					seconds++;
+					var printHours = Math.floor((seconds % (60 * 60 * 24)) / (60 * 60));
+					var printMinutes = Math.floor((seconds % (60 * 60)) / (60));
+					var printSeconds = Math.floor((seconds % 60));
+					if(printHours < 10){
+						printHours = "0"+printHours;
+					}
+					if(printMinutes < 10){
+						printMinutes = "0"+printMinutes;
+					}
+					if (printSeconds < 10){
+						printSeconds = "0"+printSeconds;
+					}
+					$('.heatColumn .trackingTimeText').eq(i).html(printHours+":"+printMinutes+":"+printSeconds);
+					if(seconds < maxOxygen){
+						var percentOygenLeft = seconds/maxOxygen
+						var newWidth = percentOygenLeft*maxBarWidth;
+					}
+					else{
+						var newWidth = maxBarWidth;
+					}
+					$('.heatColumn .trackingHeatBar').eq(i).css({"width": newWidth});
+				}
+			}
+
+			////////////////////////////////////////////////
+			// Sets amount of time elapsed since checking in
+			//////////////////////////////////////////////// 
+			function updateElapsed(){
+
+				// Updates all elapsed times for members currently at Incident Staging
+				for (var i = 0; i < $('.isColumn .checkedInCircle').length; i++){
+					var id = $('.isColumn .checkedInCircle').eq(i).parent().parent().attr('id');
+					var elapsedTime =  $('#' +id + ' .isColumn .trackingTimeText').html();
+					var timeArray = elapsedTime.split(':');
+					var seconds = (timeArray[0] * 60 * 60)+(timeArray[1]*60)+(timeArray[2]*1);
+					seconds++;
+					var printHours = Math.floor((seconds % (60 * 60 * 24)) / (60 * 60));
+					var printMinutes = Math.floor((seconds % (60 * 60)) / (60));
+					var printSeconds = Math.floor((seconds % 60));
+					if(printHours < 10){
+						printHours = "0"+printHours;
+					}
+					if(printMinutes < 10){
+						printMinutes = "0"+printMinutes;
+					}
+					if (printSeconds < 10){
+						printSeconds = "0"+printSeconds;
+					}
+					$('#' +id + ' .isColumn .trackingTimeText').html(printHours+":"+printMinutes+":"+printSeconds);
+				}
+
+				// Updates all elapsed times for members currently "In Transit from Resource Control"
+				for (var i = 0; i < $('.itColumn .arrow-right').length; i++){
+					var id = $('.itColumn .arrow-right').eq(i).parent().parent().attr('id');
+					var elapsedTime =  $('#' +id + ' .itColumn .trackingTimeText').html();
+					var timeArray = elapsedTime.split(':');
+					var seconds = (timeArray[0] * 60 * 60)+(timeArray[1]*60)+(timeArray[2]*1);
+					seconds++;
+					var printHours = Math.floor((seconds % (60 * 60 * 24)) / (60 * 60));
+					var printMinutes = Math.floor((seconds % (60 * 60)) / (60));
+					var printSeconds = Math.floor((seconds % 60));
+					if(printHours < 10){
+						printHours = "0"+printHours;
+					}
+					if(printMinutes < 10){
+						printMinutes = "0"+printMinutes;
+					}
+					if (printSeconds < 10){
+						printSeconds = "0"+printSeconds;
+					}
+					$('#' +id + ' .itColumn .trackingTimeText').html(printHours+":"+printMinutes+":"+printSeconds);
+				}
+
+				// Updates all elapsed times for members currently "In Transit from Incident Staging"
+				for (var i = 0; i < $('.itColumn .arrow-left').length; i++){
+					var id = $('.itColumn .arrow-left').eq(i).parent().parent().attr('id');
+					var elapsedTime =  $('#' +id + ' .itColumn .trackingTimeText').html();
+					var timeArray = elapsedTime.split(':');
+					var seconds = (timeArray[0] * 60 * 60)+(timeArray[1]*60)+(timeArray[2]*1);
+					seconds++;
+					var printHours = Math.floor((seconds % (60 * 60 * 24)) / (60 * 60));
+					var printMinutes = Math.floor((seconds % (60 * 60)) / (60));
+					var printSeconds = Math.floor((seconds % 60));
+					if(printHours < 10){
+						printHours = "0"+printHours;
+					}
+					if(printMinutes < 10){
+						printMinutes = "0"+printMinutes;
+					}
+					if (printSeconds < 10){
+						printSeconds = "0"+printSeconds;
+					}
+					$('#' +id + ' .itColumn .trackingTimeText').html(printHours+":"+printMinutes+":"+printSeconds);
+				}
+
+				// Updates all elapsed times for members currently at Resource Control
+				for (var i = 0; i < $('.rcColumn .checkedInCircle').length; i++){
+					var id = $('.rcColumn .checkedInCircle').eq(i).parent().parent().attr('id');
+					var elapsedTime =  $('#' +id + ' .rcColumn .trackingTimeText').html();
+					var timeArray = elapsedTime.split(':');
+					var seconds = (timeArray[0] * 60 * 60)+(timeArray[1]*60)+(timeArray[2]*1);
+					seconds++;
+					var printHours = Math.floor((seconds % (60 * 60 * 24)) / (60 * 60));
+					var printMinutes = Math.floor((seconds % (60 * 60)) / (60));
+					var printSeconds = Math.floor((seconds % 60));
+					if(printHours < 10){
+						printHours = "0"+printHours;
+					}
+					if(printMinutes < 10){
+						printMinutes = "0"+printMinutes;
+					}
+					if (printSeconds < 10){
+						printSeconds = "0"+printSeconds;
+					}
+					$('#' +id + ' .rcColumn .trackingTimeText').html(printHours+":"+printMinutes+":"+printSeconds);
+				}
+			}
+		}
+
+		
+		/////////////////////////////////////////////////////////////////////////////
+		// Calulates the elpased time for all locations that a member is currently at
+		/////////////////////////////////////////////////////////////////////////////
+		function calcElapsedTime(time){
+			var now = new Date().getTime(),
+				scannedTime = new Date(time).getTime(),
+				elapsed = now - scannedTime;
+			var hours = Math.floor((elapsed % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+			var minutes = Math.floor((elapsed % (1000 * 60 * 60)) / (1000 * 60));
+			var seconds = Math.floor((elapsed % (1000 * 60)) / 1000);
+			if(hours < 10){
+				hours = "0"+hours;
+			}
+			if(minutes < 10){
+				minutes = "0"+minutes;
+			}
+			if (seconds < 10){
+				seconds = "0"+seconds;
+			}
+			return hours + ":" + minutes + ":" + seconds;
+		}
+
+		////////////////////////////////////////////////////////////////////////////////////////// 
+		// Dims the line, checked-out circles and text when a member is currently in the heat zone
+		//////////////////////////////////////////////////////////////////////////////////////////
+		function dimElements(){
+			var numEntries = $('.entryContainer').length;
+			for(var i = 1 ; i <numEntries; i++){
+				
+				// checks if there is text in the heat column for that row.
+				var heatElapsed = $('#entry' +i + ' .heatColumn .trackingTimeText').html();
+
+				// if there is text, that mean they are in the heat
+				if(heatElapsed != undefined){
+					$('#entry' +i + ' .trackingLine').css("background-color", "rgba(151,151,151,.3)");
+					$('#entry' +i + ' .checkedOutCircle').css("border-color", "rgba(151,151,151,.3)");
+					$('#entry' +i + ' .trackingTimeText').css("color", "rgba(151,151,151,.3)");
+					$('#entry' +i + ' .heatColumn .trackingTimeText').css("color", "");
+				}
+			}
+
+		}
+
+
+		///////////////////////////////////////////////////////
+		// Posiions all the elements in each row
+		///////////////////////////////////////////////////////
+		function setPositioning(){
+
+			//////////////////////////////////////////////////////
+			// Setting Heights of Rows to have 8 rows on Page Load 
+			//////////////////////////////////////////////////////
+			var containerHeight = $('#trackingContainer').height();
+			var entriesRowBorder =$('.entryContainer').css("margin-bottom");
+			var numEntries = $('.entryContainer').length;
+			entriesRowBorder = parseFloat(entriesRowBorder);
+			var rowHeight;
+			if (numEntries > 8){
+				rowHeight = (containerHeight/8)-entriesRowBorder;
+			}
+			else{
+				rowHeight = (containerHeight/numEntries)-entriesRowBorder;
+			}
+			$('.entryContainer').height(rowHeight);
+			var rowWidth = $('.entryContainer').width();
+
+			///////////////////////////////////////////////////////////////////
+			// Setting horizontal positioning of Vertical Line to middle of row
+			///////////////////////////////////////////////////////////////////
+			var lineHeight = $('.trackingLine').height();
+			var test = (rowHeight/3)-(lineHeight/2);
+			$('.trackingLine').css("top", test);
+
+			///////////////////////////////////////////////////////////////////
+			// Set Circle Positions
+			///////////////////////////////////////////////////////////////////
+			var circleHeight = $('.checkedOutCircle').height();
+			var circlePositioning = (rowHeight/3) - (circleHeight/2);
+			var circleBorderSize = $('.checkedOutCircle').css("border-top-width");
+			circleBorderSize = parseFloat(circleBorderSize);
+			$('.checkedInCircle').css("top", circlePositioning-circleBorderSize);
+			$('.checkedOutCircle').css("top", circlePositioning-circleBorderSize);
+			$('.nameColumn').css("padding-top", circlePositioning-circleBorderSize);
+			$('.headerRow').css("padding-top", 0);
+
+			///////////////////////////////////////////////////////////////////
+			// Set Arrow Positions
+			///////////////////////////////////////////////////////////////////
+			var arrowHeight = $('.arrow-right').css("border-top-width");
+			var arrowWidth = $('.arrow-right').css("border-left-width");
+			var inTransitColumnWidth = $('.itColumn').width();
+			arrowHeight = parseFloat(arrowHeight);
+			arrowWidth = parseFloat(arrowWidth);
+			$('.arrow-right').css("top", (rowHeight/3)-arrowHeight);
+			$('.arrow-left').css("top", (rowHeight/3)-arrowHeight);
+			$('.arrow-right').css("left", (inTransitColumnWidth/2)-arrowWidth/2);
+			$('.arrow-left').css("right", (inTransitColumnWidth/2)-arrowWidth/2);
+
+			/////////////////////////////////////////////////////////////////////
+			// Set Heat Bar Width and Position
+			/////////////////////////////////////////////////////////////////////
+			var heatColumnWidth = $('.heatColumn').width();
+			var paddingWidth = rowWidth * .05;
+			var barWidth =heatColumnWidth-paddingWidth;
+			$('.trackingBackgroundBar').css("width", barWidth);
+			$('.trackingHeatBar').css("width", barWidth-60);
+
+			// Setting bar height equal to circle height
+			$('.trackingBackgroundBar').css("height", circleHeight+(2*circleBorderSize));
+			$('.trackingHeatBar').css("height", circleHeight+(2*circleBorderSize));
+
+			//Positioning bars in center of row based on circle mesurements
+			$('.trackingBackgroundBar').css("top", circlePositioning-circleBorderSize);
+			$('.trackingHeatBar').css("top", circlePositioning-circleBorderSize);
+		} 
+		
+	</script>
+</body>
+</html>
